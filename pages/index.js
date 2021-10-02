@@ -53,10 +53,10 @@ const getFloor = async collection => {
     `https://api.opensea.io/api/v1/events?collection_slug=${collection}&event_type=successful&only_opensea=false&offset=0&limit=300&occurred_after=${dt.toISOString()}`
     //'https://api.opensea.io/api/v1/events?' + params
   ).then(resp => resp.json())
-  const min = Math.min(
+  const floor = Math.min(
     ...openSeaResponse.asset_events.map(x => parseInt(x.total_price))
   )
-  return min
+  return { sold: openSeaResponse.asset_events.length, floor }
 }
 const collections = [
   {
@@ -82,7 +82,11 @@ const collections = [
   },
   {
     slug: 'woodies-generative',
-    img: 'https://storage.opensea.io/files/26800018286d6911a3795d83fb07ac4f.svg '
+    img: 'https://storage.opensea.io/files/26800018286d6911a3795d83fb07ac4f.svg'
+  },
+  {
+    slug: 'gawds',
+    img: 'https://lh3.googleusercontent.com/rXYyWGkuxuTRjzYTlPG6arr6IouFhRR0RtfLcps3NXPPy837MS1QsnQAjxnJGKTdzzfIJaLpIS_PRzOJDTR9iX3O1Hw5KuaNVngRaQ=s130'
   }
 ]
 
@@ -92,7 +96,9 @@ export default function Home() {
     const run = async () => {
       const results = await Promise.all(
         collections.map(async c => {
-          c.floor = (await getFloor(c.slug)) / 1000000000000000000
+          const { floor, sold } = await getFloor(c.slug)
+          c.floor = floor / 1000000000000000000
+          c.sold = sold
           return c
         })
       )
@@ -109,7 +115,7 @@ export default function Home() {
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
         <div className="mx-auto py-20 grid gap-x-1  gap-y-1 grid-cols-1 lg:grid-cols-4 lg:gap-y-4 lg:gap-x-4">
-          {results.map(({ img, floor, slug }) => {
+          {results.map(({ img, floor, slug, sold }) => {
             return (
               <div>
                 <img className="w-40 rounded-full" src={img} />
@@ -124,6 +130,14 @@ export default function Home() {
                     {floor}
                   </span>
                 </div>
+
+                <div className="text-gray-400 text-sm mt-2">
+                  past hr:{' '}
+                  <span className="text-lg font-bold text-gray-900">
+                    {sold}
+                  </span>
+                </div>
+
                 <div className="flex items-center justify-center">
                   <a
                     target="_blank"
