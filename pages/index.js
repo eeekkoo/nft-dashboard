@@ -106,7 +106,8 @@ const collections = [
 
 export default function Home() {
   const [results, setResults] = useState([])
-  const [total, setTotal] = useState([])
+  const [total, setTotal] = useState(0)
+  const [liquidGBP, setLiquidGBP] = useState(0)
   useEffect(() => {
     const run = async () => {
       const results = await Promise.all(
@@ -122,6 +123,18 @@ export default function Home() {
     run()
   }, [])
 
+  useEffect(() => {}, [total])
+
+  useEffect(() => {
+    const run = async () => {
+      let rates = await fetch(
+        'https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR,GBP'
+      ).then(r => r.json())
+      setLiquidGBP(rates.GBP * total)
+    }
+    run()
+  }, [total])
+
   useEffect(() => {
     let total = 0
     results.forEach(item => {
@@ -131,6 +144,7 @@ export default function Home() {
         total = total + assetTotal
       }
     })
+
     setTotal(total)
   }, [results])
   return (
@@ -189,7 +203,12 @@ export default function Home() {
 
         <span className="text-md text-gray-500">
           liquidity ETH:{' '}
-          <span className="font-bold text-gray-800">{total.toFixed(3)}</span>
+          <span className="font-bold text-gray-800">♦{total.toFixed(3)}</span>
+        </span>
+
+        <span className="text-md text-gray-500">
+          liquidity GBP:{' '}
+          <span className="font-bold text-gray-800">£{liquidGBP}</span>
         </span>
       </main>
     </div>
