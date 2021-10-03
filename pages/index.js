@@ -106,23 +106,7 @@ const collections = [
 
 export default function Home() {
   const [results, setResults] = useState([])
-  useEffect(() => {
-    window.OneSignal = window.OneSignal || []
-    OneSignal.push(function () {
-      OneSignal.init({
-        appId: '0de12a1f-b185-41ff-addb-152809a7a99b',
-        notifyButton: {
-          enable: true
-        },
-
-        allowLocalhostAsSecureOrigin: true
-      })
-    })
-
-    return () => {
-      window.OneSignal = undefined
-    }
-  }, []) // <-- run this effect once on mount
+  const [total, setTotal] = useState([])
   useEffect(() => {
     const run = async () => {
       const results = await Promise.all(
@@ -136,7 +120,19 @@ export default function Home() {
       setResults(results)
     }
     run()
-  })
+  }, [])
+
+  useEffect(() => {
+    let total = 0
+    results.forEach(item => {
+      let assetTotal = item.quantity * item.floor
+      if (isFinite(assetTotal)) {
+        console.log(assetTotal)
+        total = total + assetTotal
+      }
+    })
+    setTotal(total)
+  }, [results])
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
@@ -190,6 +186,11 @@ export default function Home() {
             )
           })}
         </div>
+
+        <span className="text-md text-gray-500">
+          liquidity ETH:{' '}
+          <span className="font-bold text-gray-800">{total.toFixed(3)}</span>
+        </span>
       </main>
     </div>
   )
