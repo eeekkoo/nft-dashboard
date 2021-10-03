@@ -1,3 +1,8 @@
+- https://mdtanrikulu.github.io/use-metamask/
+- https://medium.com/matic-network/ethereum-in-realtime-dagger-98ee2d717c76
+- https://www.npmjs.com/package/@maticnetwork/eth-dagger
+- https://github.com/maticnetwork/dagger.js
+
 # Next.js + Tailwind CSS Example
 
 This example shows how to use [Tailwind CSS](https://tailwindcss.com/) [(v2.2)](https://blog.tailwindcss.com/tailwindcss-2-2) with Next.js. It follows the steps outlined in the official [Tailwind docs](https://tailwindcss.com/docs/guides/nextjs).

@@ -61,37 +61,68 @@ const getFloor = async collection => {
 const collections = [
   {
     slug: 'deadfellaz',
+    quantity: 1,
+    cost: 0.383,
     img: 'https://lh3.googleusercontent.com/seJEwLWJP3RAXrxboeG11qbc_MYrxwVrsxGH0s0qxvF68hefOjf5qrPSKkIknUTYzfvinOUPWbYBdM8VEtGEE980Qv2ti_GGd86OWQ=s130'
   },
   {
     slug: 'fanggangnft',
+    quantity: 1,
+    cost: 0.099,
     img: 'https://lh3.googleusercontent.com/Nc1-09BlzwmD5Yg60hcSq9myqWV2XOTw3wbqtMX1YPxKKMJ4-aaGAEckZK0DkYerBi1OenpH-7CuQrKl5zVRE7Q_lWOi_GbDWh51Gw=s130'
   },
   {
     slug: 'peaceful-groupies',
+    quantity: 1,
+    cost: 0.69,
     img: 'https://lh3.googleusercontent.com/cG9j3L8r61_Y5VKNUE3pfHnWPWPNt1ld8Zmyyslx6VV_54-ffsRAuYCg838IhOuek9cL5bHahpgj10ugtKkomDqFOuBAhcIxemow9w=s130'
   },
 
   {
     slug: 'tunesproject',
+    quantity: 6,
+    cost: 0,
     img: 'https://lh3.googleusercontent.com/Nb-AyBcWvFIx4ca8om3GE1innjt59zcTPOIWm67zqaRTjGScBpu2-LFpHp92OISFbtM1Df_N-pcwUlA4x0iMOh8C8ZYvtScd6yWy=s130'
   },
   {
     slug: 'sadgirlsbar',
+    quantity: 1,
+    cost: 0.12,
     img: 'https://lh3.googleusercontent.com/tDq_9Vqull9yDeWdotD818etAFEIJo8r893K-rEg_ZFTnBQGzzGAjk6SkMjrpADnmo7t0RKUE53j-uQnB72buAP0PgAB9tH6GIV9=s130'
   },
   {
     slug: 'woodies-generative',
+    quantity: 1,
+    cost: 0.08,
     img: 'https://storage.opensea.io/files/26800018286d6911a3795d83fb07ac4f.svg'
   },
   {
     slug: 'gawds',
+    quantity: 4,
+    cost: 0.08,
     img: 'https://lh3.googleusercontent.com/rXYyWGkuxuTRjzYTlPG6arr6IouFhRR0RtfLcps3NXPPy837MS1QsnQAjxnJGKTdzzfIJaLpIS_PRzOJDTR9iX3O1Hw5KuaNVngRaQ=s130'
   }
 ]
 
 export default function Home() {
   const [results, setResults] = useState([])
+  useEffect(() => {
+    window.OneSignal = window.OneSignal || []
+    OneSignal.push(function () {
+      OneSignal.init({
+        appId: '0de12a1f-b185-41ff-addb-152809a7a99b',
+        notifyButton: {
+          enable: true
+        },
+
+        allowLocalhostAsSecureOrigin: true
+      })
+    })
+
+    return () => {
+      window.OneSignal = undefined
+    }
+  }, []) // <-- run this effect once on mount
   useEffect(() => {
     const run = async () => {
       const results = await Promise.all(
@@ -115,7 +146,7 @@ export default function Home() {
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
         <div className="mx-auto py-20 grid gap-x-1  gap-y-1 grid-cols-1 lg:grid-cols-4 lg:gap-y-4 lg:gap-x-4">
-          {results.map(({ img, floor, slug, sold }) => {
+          {results.map(({ img, floor, slug, sold, cost }) => {
             return (
               <div>
                 <img className="w-40 rounded-full" src={img} />
@@ -132,7 +163,14 @@ export default function Home() {
                 </div>
 
                 <div className="text-gray-400 text-sm mt-2">
-                  past hr:{' '}
+                  return:{' '}
+                  <span className="text-lg font-bold text-gray-900">
+                    {((floor - cost) * 100).toFixed(2)}%
+                  </span>
+                </div>
+
+                <div className="text-gray-400 text-sm mt-2">
+                  sold past hr:{' '}
                   <span className="text-lg font-bold text-gray-900">
                     {sold}
                   </span>
