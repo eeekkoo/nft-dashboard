@@ -1,5 +1,14 @@
 import Head from 'next/head'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import { styled, keyframes } from '@stitches/react'
+import { violet, blackA, mauve, green } from '@radix-ui/colors'
+import { Cross2Icon } from '@radix-ui/react-icons'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import Chart from 'chart.js'
+import moment from 'moment'
+import * as _ from 'lodash'
+import { Table, Button } from '@geist-ui/react'
+
 const osLogo = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -108,6 +117,7 @@ export default function Home() {
   const [results, setResults] = useState([])
   const [total, setTotal] = useState(0)
   const [liquidGBP, setLiquidGBP] = useState(0)
+  const [collection, setCollection] = useState('deadfellaz')
   useEffect(() => {
     const run = async () => {
       const results = await Promise.all(
@@ -154,53 +164,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        <div className="mx-auto py-20 grid gap-x-1  gap-y-1 grid-cols-1 lg:grid-cols-4 lg:gap-y-4 lg:gap-x-4">
-          {results.map(({ img, floor, slug, sold, cost }) => {
-            return (
-              <div>
-                <img className="w-40 rounded-full" src={img} />
-                {/* <img
-                  className="w-4"
-                  src="https://ethereum.org/static/a110735dade3f354a46fc2446cd52476/0ee04/eth-home-icon.png"
-                /> */}
-
-                <div className="text-gray-400 text-sm mt-2">
-                  floor:{' '}
-                  <span className="text-lg font-bold text-gray-900">
-                    {floor}
-                  </span>
-                </div>
-
-                <div className="text-gray-400 text-sm mt-2">
-                  return:{' '}
-                  <span className="text-lg font-bold text-gray-900">
-                    {((floor - cost) * 100).toFixed(2)}%
-                  </span>
-                </div>
-
-                <div className="text-gray-400 text-sm mt-2">
-                  sold past hr:{' '}
-                  <span className="text-lg font-bold text-gray-900">
-                    {sold}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-center">
-                  <a
-                    target="_blank"
-                    href={`https://opensea.io/collection/${slug}`}
-                    className="text-gray-400 text-sm mt-2"
-                  >
-                    os
-                    <External />
-                  </a>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
+      <main className="flex flex-col w-full flex-1 px-20 container max-w-5xl">
         <span className="text-md text-gray-500">
           liquidity ETH:{' '}
           <span className="font-bold text-gray-800">♦{total.toFixed(3)}</span>
@@ -210,7 +174,217 @@ export default function Home() {
           liquidity GBP:{' '}
           <span className="font-bold text-gray-800">£{liquidGBP}</span>
         </span>
+        {/* <div className="mx-auto py-20 grid gap-x-1  gap-y-1 grid-cols-1 lg:grid-cols-4 lg:gap-y-4 lg:gap-x-4"> */}
+        <div className=" py-20">
+          {(() => {
+            let x = results.map(({ img, floor, slug, sold, cost, ...rest }) => {
+              return {
+                return: `${((floor - cost) * 100).toFixed(2)}%`,
+                os: (
+                  <a
+                    target="_blank"
+                    href={`https://opensea.io/collection/${slug}`}
+                  >
+                    os
+                  </a>
+                ),
+                slug: (
+                  <div className="flex items-center">
+                    <img className="w-8 h-8 rounded-full mr-2" src={img} />
+                    {slug}
+                  </div>
+                ),
+                slug2: slug,
+                floor
+              }
+            })
+            //const [data, setData] = useState(dataSource)
+            const renderAction = (value, rowData, index) => {
+              const removeHandler = () => {
+                setCollection(rowData)
+              }
+              return (
+                <Button
+                  type="default"
+                  auto
+                  scale={1 / 3}
+                  onClick={removeHandler}
+                >
+                  Show Chart
+                </Button>
+              )
+            }
+            return (
+              <Table data={x}>
+                <Table.Column prop="slug" label="slug" />
+                <Table.Column prop="floor" label="floor" />
+                <Table.Column prop="return" label="return" />
+                <Table.Column prop="os" label="os" />
+                <Table.Column
+                  prop="slug2"
+                  label="slug2"
+                  //width={150}
+                  render={renderAction}
+                />
+              </Table>
+            )
+          })()}
+        </div>
+
+        <SalesChart collection={collection} />
+        <FloorChart collection={collection} />
       </main>
     </div>
   )
+}
+
+const createChart = (ctx, labels, data, gradient) => {
+  return new Chart(ctx, {
+    type: 'line',
+    options: {
+      hover: {
+        animationDuration: 0
+      },
+      legend: {
+        labels: {
+          usePointStyle: true,
+          boxWidth: 6
+        }
+      },
+      scales: {
+        xAxes: [
+          {
+            type: 'time',
+            gridLines: {
+              color: '#fff',
+              display: false,
+              drawBorder: false //<- set this
+            },
+            ticks: {
+              fontColor: '#CCC' // this here
+            }
+          }
+        ],
+        yAxes: [
+          {
+            gridLines: {
+              color: '#fff',
+              display: false,
+              drawBorder: false //<- set this
+            },
+            ticks: {
+              fontColor: '#CCC' // this here
+            }
+          }
+        ]
+      }
+    },
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          backgroundColor: gradient, // Put the gradient here as a fill color
+          borderColor: 'rgb(110, 121, 214, 1)',
+          pointBackgroundColor: 'rgb(110, 121, 214, 1)',
+          pointBorderColor: 'rgb(110, 121, 214, 1)',
+          pointHighlightFill: 'rgb(110, 121, 214, 1)',
+          pointHighlightStroke: 'rgb(110, 121, 214, 1)',
+          pointStyle: 'circle',
+          pointRadius: 4,
+          label: 1 + ' floor',
+          trendlineLinear: {
+            style: '#rgb(110, 121, 214, .5)',
+            lineStyle: 'line',
+            width: 5
+          },
+          data: data,
+          borderWidth: 1
+        }
+      ]
+    }
+  })
+}
+
+const FloorChart = ({ collection }) => {
+  const ref = useRef()
+  useEffect(() => {
+    const run = async () => {
+      if (!ref.current) return
+      var dt = new Date()
+      dt.setHours(dt.getHours() - 2)
+      const params = new URLSearchParams({
+        offset: '0',
+        event_type: 'successful',
+        only_opensea: 'false',
+        occurred_after: dt.toISOString(),
+        collection_slug: collection,
+        limit: 300
+      })
+
+      const res = await fetch('https://api.opensea.io/api/v1/events?' + params)
+        .then(r => r.json())
+        .then(
+          d =>
+            d.asset_events.reverse().map(x => ({
+              eth: x.total_price / 1000000000000000000,
+              created_date: x.created_date,
+              transaction_date: x.transaction.timestamp
+            }))
+          //.filter((x) => x.eth < 1)
+        )
+
+      var ctx = ref.current.getContext('2d')
+      var gradient = ctx.createLinearGradient(0, 0, 0, 400)
+      gradient.addColorStop(0, 'rgb(110, 121, 214, 1)')
+      gradient.addColorStop(1, 'rgb(110, 121, 214, .1)')
+      let data = res.map(x => ({ t: x.transaction_date, y: x.eth }))
+      let labels = res.map(x => x.transaction_date)
+      createChart(ctx, labels, data, gradient)
+    }
+    run()
+  }, [ref, collection])
+
+  return <canvas ref={ref} />
+}
+
+const SalesChart = ({ collection }) => {
+  const ref = useRef()
+  useEffect(() => {
+    const run = async () => {
+      if (!ref.current) return
+      var dt = new Date()
+      dt.setHours(dt.getHours() - 2)
+      const params = new URLSearchParams({
+        offset: '0',
+        event_type: 'successful',
+        only_opensea: 'false',
+        occurred_after: dt.toISOString(),
+        collection_slug: collection,
+        limit: 300
+      })
+
+      const res = await fetch(
+        'https://api.opensea.io/api/v1/events?' + params
+      ).then(r => r.json())
+
+      let sales = res.asset_events.reverse().map(x => x.transaction.timestamp)
+      var groups = _.groupBy(sales, function (date) {
+        return moment(date).startOf('minutes').format()
+      })
+      //console.log(groups);
+      var ctx = ref.current.getContext('2d')
+
+      var gradient = ctx.createLinearGradient(0, 0, 0, 400)
+      gradient.addColorStop(0, 'rgb(110, 121, 214, 1)')
+      gradient.addColorStop(1, 'rgb(110, 121, 214, .1)')
+
+      let labels = Object.keys(groups)
+      let data = Object.keys(groups).map(x => ({ t: x, y: groups[x].length }))
+
+      createChart(ctx, labels, data, gradient)
+    }
+    run()
+  }, [ref, collection])
+
+  return <canvas ref={ref} />
 }
