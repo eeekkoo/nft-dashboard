@@ -47,7 +47,7 @@ const External = () => (
 )
 const getFloor = async collection => {
   var dt = new Date()
-  dt.setHours(dt.getHours() - 24)
+  dt.setHours(dt.getHours() - 1)
 
   const params = new URLSearchParams({
     offset: '0',
@@ -318,7 +318,7 @@ const FloorChart = ({ collection }) => {
     const run = async () => {
       if (!ref.current) return
       var dt = new Date()
-      dt.setHours(dt.getHours() - 24)
+      dt.setHours(dt.getHours() - 1)
       const params = new URLSearchParams({
         offset: '0',
         event_type: 'successful',
@@ -360,7 +360,7 @@ const SalesChart = ({ collection }) => {
     const run = async () => {
       if (!ref.current) return
       var dt = new Date()
-      dt.setHours(dt.getHours() - 24)
+      dt.setHours(dt.getHours() - 1)
       const params = new URLSearchParams({
         offset: '0',
         event_type: 'successful',
