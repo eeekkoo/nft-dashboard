@@ -47,7 +47,7 @@ const External = () => (
 )
 const getFloor = async collection => {
   var dt = new Date()
-  dt.setHours(dt.getHours() - 1)
+  dt.setHours(dt.getHours() - 24)
 
   const params = new URLSearchParams({
     offset: '0',
@@ -115,6 +115,7 @@ const collections = [
 
 export default function Home() {
   const [results, setResults] = useState([])
+  const [tableData, setTableData] = useState()
   const [total, setTotal] = useState(0)
   const [liquidGBP, setLiquidGBP] = useState(0)
   const [collection, setCollection] = useState('deadfellaz')
@@ -132,8 +133,6 @@ export default function Home() {
     }
     run()
   }, [])
-
-  useEffect(() => {}, [total])
 
   useEffect(() => {
     const run = async () => {
@@ -157,6 +156,34 @@ export default function Home() {
 
     setTotal(total)
   }, [results])
+  useEffect(() => {
+    let tableData = results
+      .map(x => {
+        x.percent = (x.floor - x.cost) * 100
+        return x
+      })
+      .sort((a, b) => (a.percent < b.percent ? 1 : -1))
+      .map(({ img, floor, slug, sold, cost }) => {
+        return {
+          return: `${((floor - cost) * 100).toFixed(2)}%`,
+          os: (
+            <a target="_blank" href={`https://opensea.io/collection/${slug}`}>
+              os
+            </a>
+          ),
+          slug: (
+            <div className="flex items-center">
+              <img className="w-8 h-8 rounded-full mr-2" src={img} />
+              {slug}
+            </div>
+          ),
+          slug2: slug,
+          floor,
+          sold: sold
+        }
+      })
+    setTableData(tableData)
+  }, [results])
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
@@ -177,31 +204,10 @@ export default function Home() {
         {/* <div className="mx-auto py-20 grid gap-x-1  gap-y-1 grid-cols-1 lg:grid-cols-4 lg:gap-y-4 lg:gap-x-4"> */}
         <div className=" py-20">
           {(() => {
-            let x = results.map(({ img, floor, slug, sold, cost, ...rest }) => {
-              return {
-                return: `${((floor - cost) * 100).toFixed(2)}%`,
-                os: (
-                  <a
-                    target="_blank"
-                    href={`https://opensea.io/collection/${slug}`}
-                  >
-                    os
-                  </a>
-                ),
-                slug: (
-                  <div className="flex items-center">
-                    <img className="w-8 h-8 rounded-full mr-2" src={img} />
-                    {slug}
-                  </div>
-                ),
-                slug2: slug,
-                floor
-              }
-            })
             //const [data, setData] = useState(dataSource)
             const renderAction = (value, rowData, index) => {
               const removeHandler = () => {
-                setCollection(rowData)
+                setCollection(rowData.slug2)
               }
               return (
                 <Button
@@ -215,14 +221,15 @@ export default function Home() {
               )
             }
             return (
-              <Table data={x}>
+              <Table data={tableData}>
                 <Table.Column prop="slug" label="slug" />
                 <Table.Column prop="floor" label="floor" />
                 <Table.Column prop="return" label="return" />
                 <Table.Column prop="os" label="os" />
+                <Table.Column prop="sold" label="sold past hour" />
                 <Table.Column
                   prop="slug2"
-                  label="slug2"
+                  label="toggle chart"
                   //width={150}
                   render={renderAction}
                 />
@@ -311,7 +318,7 @@ const FloorChart = ({ collection }) => {
     const run = async () => {
       if (!ref.current) return
       var dt = new Date()
-      dt.setHours(dt.getHours() - 2)
+      dt.setHours(dt.getHours() - 24)
       const params = new URLSearchParams({
         offset: '0',
         event_type: 'successful',
@@ -353,7 +360,7 @@ const SalesChart = ({ collection }) => {
     const run = async () => {
       if (!ref.current) return
       var dt = new Date()
-      dt.setHours(dt.getHours() - 2)
+      dt.setHours(dt.getHours() - 24)
       const params = new URLSearchParams({
         offset: '0',
         event_type: 'successful',
