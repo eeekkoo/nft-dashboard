@@ -7,7 +7,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import Chart from 'chart.js'
 import moment from 'moment'
 import * as _ from 'lodash'
-import { Table, Button } from '@geist-ui/react'
+import { Table, Button, ButtonDropdown } from '@geist-ui/react'
 
 const osLogo = () => (
   <svg
@@ -45,9 +45,9 @@ const External = () => (
     ></path>
   </svg>
 )
-const getFloor = async collection => {
+const getFloor = async (collection, date) => {
   var dt = new Date()
-  dt.setHours(dt.getHours() - 1)
+  dt.setHours(dt.getHours() - date)
 
   const params = new URLSearchParams({
     offset: '0',
@@ -115,6 +115,10 @@ const collections = [
 
 export default function Home() {
   const [results, setResults] = useState([])
+  const [floor, setFloor] = useState([])
+  const resultsRef = useRef()
+  const tableDataRef = useRef()
+  const [date, setDate] = useState(1)
   const [tableData, setTableData] = useState()
   const [total, setTotal] = useState(0)
   const [liquidGBP, setLiquidGBP] = useState(0)
@@ -123,13 +127,27 @@ export default function Home() {
     const run = async () => {
       const results = await Promise.all(
         collections.map(async c => {
-          const { floor, sold } = await getFloor(c.slug)
-          c.floor = floor / 1000000000000000000
+          const { _, sold } = await getFloor(c.slug, date)
+          //c.floor = floor / 1000000000000000000
+          //c.floor = parseInt(floor?.find(x => x.collection === c.slug)) / 1000000000000000000
+          c.floor =
+            parseInt(floor.find(x => x.collection == c.slug)?.floor) /
+            1000000000000000000
           c.sold = sold
           return c
         })
       )
       setResults(results)
+      resultsRef.current = results
+    }
+    run()
+  }, [date, floor])
+
+  useEffect(() => {
+    const run = async () => {
+      let res = await fetch('/api/floor').then(r => r.json())
+      console.log(res)
+      setFloor(res)
     }
     run()
   }, [])
@@ -155,7 +173,7 @@ export default function Home() {
     })
 
     setTotal(total)
-  }, [results])
+  }, [resultsRef])
   useEffect(() => {
     let tableData = results
       .map(x => {
@@ -183,7 +201,8 @@ export default function Home() {
         }
       })
     setTableData(tableData)
-  }, [results])
+    tableDataRef.current = tableData
+  }, [resultsRef])
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
@@ -221,7 +240,7 @@ export default function Home() {
               )
             }
             return (
-              <Table data={tableData}>
+              <Table data={tableDataRef.current}>
                 <Table.Column prop="slug" label="slug" />
                 <Table.Column prop="floor" label="floor" />
                 <Table.Column prop="return" label="return" />
@@ -238,8 +257,23 @@ export default function Home() {
           })()}
         </div>
 
-        <SalesChart collection={collection} />
-        <FloorChart collection={collection} />
+        <ButtonDropdown>
+          <ButtonDropdown.Item onClick={_ => setDate(1)} main>
+            1h Ago
+          </ButtonDropdown.Item>
+          <ButtonDropdown.Item onClick={_ => setDate(3)}>
+            3h Ago
+          </ButtonDropdown.Item>
+          <ButtonDropdown.Item onClick={_ => setDate(12)}>
+            12h Ago
+          </ButtonDropdown.Item>
+          <ButtonDropdown.Item onClick={_ => setDate(24)}>
+            1d ago
+          </ButtonDropdown.Item>
+        </ButtonDropdown>
+
+        <SalesChart date={date} collection={collection} />
+        <FloorChart date={date} collection={collection} />
       </main>
     </div>
   )
@@ -312,13 +346,13 @@ const createChart = (ctx, labels, data, gradient) => {
   })
 }
 
-const FloorChart = ({ collection }) => {
+const FloorChart = ({ collection, date }) => {
   const ref = useRef()
   useEffect(() => {
     const run = async () => {
       if (!ref.current) return
       var dt = new Date()
-      dt.setHours(dt.getHours() - 1)
+      dt.setHours(dt.getHours() - date)
       const params = new URLSearchParams({
         offset: '0',
         event_type: 'successful',
@@ -354,13 +388,13 @@ const FloorChart = ({ collection }) => {
   return <canvas ref={ref} />
 }
 
-const SalesChart = ({ collection }) => {
+const SalesChart = ({ collection, date }) => {
   const ref = useRef()
   useEffect(() => {
     const run = async () => {
       if (!ref.current) return
       var dt = new Date()
-      dt.setHours(dt.getHours() - 1)
+      dt.setHours(dt.getHours() - date)
       const params = new URLSearchParams({
         offset: '0',
         event_type: 'successful',
