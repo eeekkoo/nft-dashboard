@@ -116,6 +116,7 @@ const collections = [
 
 export default function Home() {
   const [results, setResults] = useState([])
+  const [loading, setLoading] = useState(true)
   const resultsRef = useRef()
   const tableDataRef = useRef()
   const [date, setDate] = useState(1)
@@ -141,6 +142,7 @@ export default function Home() {
       )
       setResults(results)
       resultsRef.current = results
+      setLoading(false)
     }
     run()
   }, [date])
@@ -166,7 +168,7 @@ export default function Home() {
 
   useEffect(() => {
     let total = 0
-    results.forEach(item => {
+    results?.forEach(item => {
       let assetTotal = item.quantity * item.floor
       if (isFinite(assetTotal)) {
         console.log(assetTotal)
@@ -175,7 +177,7 @@ export default function Home() {
     })
 
     setTotal(total)
-  }, [resultsRef])
+  }, [results])
   useEffect(() => {
     if (true) {
       console.log(results)
@@ -210,6 +212,24 @@ export default function Home() {
       tableDataRef.current = tableData
     }
   }, [results])
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }}
+      >
+        <img
+          className="w-7"
+          src="https://ethereum.org/static/a62391514b71539906d6bd8ec820c7d8/ed396/eth-diamond-glyph.png"
+        />
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
