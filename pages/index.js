@@ -8,6 +8,7 @@ import Chart from 'chart.js'
 import moment from 'moment'
 import * as _ from 'lodash'
 import { Table, Button, ButtonDropdown } from '@geist-ui/react'
+import { result } from 'lodash'
 
 const osLogo = () => (
   <svg
@@ -115,7 +116,6 @@ const collections = [
 
 export default function Home() {
   const [results, setResults] = useState([])
-  const [floor, setFloor] = useState([])
   const resultsRef = useRef()
   const tableDataRef = useRef()
   const [date, setDate] = useState(1)
@@ -125,14 +125,16 @@ export default function Home() {
   const [collection, setCollection] = useState('deadfellaz')
   useEffect(() => {
     const run = async () => {
+      let floor = await fetch('/api/floor').then(r => r.json())
+      if (floor.length === 0) return
       const results = await Promise.all(
         collections.map(async c => {
           const { _, sold } = await getFloor(c.slug, date)
           //c.floor = floor / 1000000000000000000
-          //c.floor = parseInt(floor?.find(x => x.collection === c.slug)) / 1000000000000000000
           c.floor =
             parseInt(floor.find(x => x.collection == c.slug)?.floor) /
             1000000000000000000
+          console.log(c.floor)
           c.sold = sold
           return c
         })
@@ -141,16 +143,16 @@ export default function Home() {
       resultsRef.current = results
     }
     run()
-  }, [date, floor])
+  }, [date])
 
-  useEffect(() => {
-    const run = async () => {
-      let res = await fetch('/api/floor').then(r => r.json())
-      console.log(res)
-      setFloor(res)
-    }
-    run()
-  }, [])
+  // useEffect(() => {
+  //   const run = async () => {
+  //     let res = await fetch('/api/floor').then(r => r.json())
+  //     console.log(res)
+  //     setFloor(res)
+  //   }
+  //   run()
+  // }, [])
 
   useEffect(() => {
     const run = async () => {
@@ -175,34 +177,39 @@ export default function Home() {
     setTotal(total)
   }, [resultsRef])
   useEffect(() => {
-    let tableData = results
-      .map(x => {
-        x.percent = (x.floor - x.cost) * 100
-        return x
-      })
-      .sort((a, b) => (a.percent < b.percent ? 1 : -1))
-      .map(({ img, floor, slug, sold, cost }) => {
-        return {
-          return: `${((floor - cost) * 100).toFixed(2)}%`,
-          os: (
-            <a target="_blank" href={`https://opensea.io/collection/${slug}`}>
-              os
-            </a>
-          ),
-          slug: (
-            <div className="flex items-center">
-              <img className="w-8 h-8 rounded-full mr-2" src={img} />
-              {slug}
-            </div>
-          ),
-          slug2: slug,
-          floor,
-          sold: sold
-        }
-      })
-    setTableData(tableData)
-    tableDataRef.current = tableData
-  }, [resultsRef])
+    if (true) {
+      console.log(results)
+      let tableData = resultsRef?.current
+        ?.map(x => {
+          x.percent = (x.floor - x.cost) * 100
+          return x
+        })
+        .sort((a, b) => (a.percent < b.percent ? 1 : -1))
+        .map(({ img, floor, slug, sold, cost }) => {
+          return {
+            return: `${((floor - cost) * 100).toFixed(2)}%`,
+            os: (
+              <a target="_blank" href={`https://opensea.io/collection/${slug}`}>
+                os
+              </a>
+            ),
+            slug: (
+              <div className="flex items-center">
+                <img className="w-8 h-8 rounded-full mr-2" src={img} />
+                {slug}
+              </div>
+            ),
+            slug2: slug,
+            floor,
+            sold: sold
+          }
+        })
+      setTableData(tableData)
+      console.log(tableData)
+      console.log(11)
+      tableDataRef.current = tableData
+    }
+  }, [results])
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
